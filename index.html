@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Audio Capture App</title>
+  <!-- ローカルのMaterialize CSS -->
+  <link href="node_modules/materialize-css/dist/css/materialize.min.css" rel="stylesheet">
+  <!-- ローカルのMaterial Icons CSS -->
+  <link href="material-icons.css" rel="stylesheet">
+  <style>
+    body {
+      background: #fafafa;
+      padding-top: 50px;
+      font-family: 'Roboto', sans-serif;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .status {
+      font-size: 20px;
+      margin: 20px 0;
+    }
+    .volume-slider {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container center-align">
+    <h3>Audio Capture App</h3>
+    <div class="row">
+      <div class="col s12">
+        <button id="startBtn" class="waves-effect waves-light btn-large"><i class="material-icons left">mic</i>Start Recording</button>
+        <button id="stopBtn" class="waves-effect waves-light btn-large" disabled><i class="material-icons left">stop</i>Stop Recording</button>
+      </div>
+    </div>
+    <p id="recordingStatus" class="status">Stopped.</p>
+    <div class="row volume-slider">
+      <div class="input-field col s12">
+        <label for="micVolume">Mic Volume</label>
+        <input type="range" id="micVolume" min="0" max="255" value="0">
+      </div>
+    </div>
+    <div class="row volume-slider">
+      <div class="input-field col s12">
+        <label for="systemVolume">Blackhole Volume</label>
+        <input type="range" id="systemVolume" min="0" max="255" value="0">
+      </div>
+    </div>
+    <div class="row">
+      <audio id="audioPlayback" controls class="responsive-video"></audio>
+    </div>
+  </div>
+  <!-- ローカルのMaterialize JS -->
+  <script src="materialize.min.js"></script>
+  <script src="renderer.js"></script>
+</body>
+</html>

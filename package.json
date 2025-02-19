@@ -1,0 +1,15 @@
+{
+  "name": "rec-agent",
+  "version": "1.0.0",
+  "description": "Electronを用いた録音アプリ",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "materialize-css": "^1.0.0"
+  },
+  "devDependencies": {
+    "electron": "^25.3.0"
+  }
+}
