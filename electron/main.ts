@@ -16,12 +16,13 @@ async function createWindow() {
     minWidth: 1000,
     minHeight: 700,
     show: false,
+    useContentSize: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
       webSecurity: false
     },
-    backgroundColor: '#121212'
+    backgroundColor: '#121212',
   });
 
   // ウィンドウの準備ができたら表示

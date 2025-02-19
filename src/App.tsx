@@ -4,22 +4,35 @@ import { RecordingControls } from './components/RecordingControls';
 import { useAudioRecorder } from './hooks/useAudioRecorder';
 
 const AppContainer = styled(Box)(({ theme }) => ({
-  minHeight: '100vh',
-  height: '100vh',
+  width: '100%',
+  height: '100%',
   background: `linear-gradient(145deg, ${theme.palette.grey[900]} 0%, ${theme.palette.grey[800]} 100%)`,
   display: 'flex',
-  alignItems: 'center',
+  flexDirection: 'column',
   overflow: 'hidden',
 }));
+
+const StyledContainer = styled(Container)({
+  flex: 1,
+  padding: '0 !important',
+  margin: '0 !important',
+  maxWidth: 'none !important',
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100%',
+  width: '100%'
+});
 
 const GlassPanel = styled(Box)(({ theme }) => ({
   backgroundColor: 'rgba(0, 0, 0, 0.6)',
   backdropFilter: 'blur(10px)',
-  padding: theme.spacing(3),
+  padding: theme.spacing(3, 0),
   boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-  width: '100%',
-  height: '100%',
-  overflowY: 'auto',
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'hidden',
+  width: '100%'
 }));
 
 const App: React.FC = () => {
@@ -35,7 +48,7 @@ const App: React.FC = () => {
 
   return (
     <AppContainer>
-      <Container maxWidth={false}>
+      <StyledContainer maxWidth={false}>
         <GlassPanel>
           <Box sx={{ textAlign: 'center', mb: 3 }}>
             <Typography 
@@ -72,7 +85,7 @@ const App: React.FC = () => {
             onStop={stopRecording}
           />
         </GlassPanel>
-      </Container>
+      </StyledContainer>
     </AppContainer>
   );
 };
