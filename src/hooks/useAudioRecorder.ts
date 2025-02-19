@@ -24,7 +24,9 @@ export const useAudioRecorder = () => {
   const micAnalyserRef = useRef<AnalyserNode | null>(null);
   const blackholeAnalyserRef = useRef<AnalyserNode | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<number | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const startTimeRef = useRef<number | null>(null);
+  const isRecordingRef = useRef<boolean>(false);
 
   const getBlackholeStream = useCallback(async () => {
     const devices = await navigator.mediaDevices.enumerateDevices();
@@ -39,7 +41,10 @@ export const useAudioRecorder = () => {
     });
   }, []);
 
-  const updateVolumeIndicators = useCallback(() => {
+  const updateVolumeAndTimer = useCallback(() => {
+    if (!isRecordingRef.current) return;
+
+    // Update volume indicators
     if (micAnalyserRef.current) {
       const micData = new Uint8Array(micAnalyserRef.current.frequencyBinCount);
       micAnalyserRef.current.getByteFrequencyData(micData);
@@ -54,7 +59,13 @@ export const useAudioRecorder = () => {
       setState(prev => ({ ...prev, blackholeVolume }));
     }
 
-    requestAnimationFrame(updateVolumeIndicators);
+    // Update timer
+    if (startTimeRef.current) {
+      const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      setState(prev => ({ ...prev, recordingTime: elapsed }));
+    }
+
+    animationFrameRef.current = requestAnimationFrame(updateVolumeAndTimer);
   }, []);
 
   const startRecording = useCallback(async () => {
@@ -118,32 +129,30 @@ export const useAudioRecorder = () => {
       };
 
       recorderRef.current.start();
+      startTimeRef.current = Date.now();
+      isRecordingRef.current = true;
       setState(prev => ({ ...prev, isRecording: true, recordingTime: 0 }));
 
-      // タイマーの開始
-      const startTime = Date.now();
-      const updateTimer = () => {
-        if (!state.isRecording) return;
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        setState(prev => ({ ...prev, recordingTime: elapsed }));
-        timerRef.current = requestAnimationFrame(updateTimer);
-      };
-      updateTimer();
-      updateVolumeIndicators();
+      // Start the combined update loop
+      updateVolumeAndTimer();
     } catch (err) {
       console.error('Recording error:', err);
       throw err;
     }
-  }, [getBlackholeStream, state.isRecording, updateVolumeIndicators]);
+  }, [getBlackholeStream, updateVolumeAndTimer]);
 
   const stopRecording = useCallback(() => {
     if (recorderRef.current && recorderRef.current.state !== 'inactive') {
       recorderRef.current.stop();
     }
 
-    if (timerRef.current) {
-      cancelAnimationFrame(timerRef.current);
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
+
+    isRecordingRef.current = false;
+    startTimeRef.current = null;
 
     // ストリームを停止せず、一時停止する
     if (micStreamRef.current) {
@@ -164,8 +173,8 @@ export const useAudioRecorder = () => {
   useEffect(() => {
     return () => {
       // クリーンアップ関数
-      if (timerRef.current) {
-        cancelAnimationFrame(timerRef.current);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
       if (micStreamRef.current) {
         micStreamRef.current.getTracks().forEach(track => track.stop());

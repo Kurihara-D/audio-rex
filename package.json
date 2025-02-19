@@ -15,6 +15,7 @@
   },
   "build": {
     "appId": "com.rec-agent.app",
+    "productName": "Audio Recorder Pro",
     "files": [
       "build/**/*",
       "dist/**/*",
@@ -24,8 +25,17 @@
       "buildResources": "assets",
       "output": "release"
     },
+    "asar": true,
     "mac": {
-      "category": "public.app-category.utilities"
+      "category": "public.app-category.utilities",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     }
   },
   "dependencies": {

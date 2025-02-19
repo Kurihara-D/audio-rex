@@ -4,12 +4,15 @@ import * as isDev from 'electron-is-dev';
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1200,
+    height: 800,
+    minWidth: 1000,
+    minHeight: 700,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
     },
+    backgroundColor: '#121212'
   });
 
   // 開発環境ではローカルサーバー、本番環境ではビルドされたファイルを読み込む

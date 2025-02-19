@@ -38,12 +38,15 @@ const path = __importStar(require("path"));
 const isDev = __importStar(require("electron-is-dev"));
 function createWindow() {
     const mainWindow = new electron_1.BrowserWindow({
-        width: 800,
-        height: 600,
+        width: 1200,
+        height: 800,
+        minWidth: 1000,
+        minHeight: 700,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false
         },
+        backgroundColor: '#121212'
     });
     // 開発環境ではローカルサーバー、本番環境ではビルドされたファイルを読み込む
     if (isDev) {

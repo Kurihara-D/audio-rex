@@ -1,7 +1,36 @@
 import React from 'react';
-import { Box, Button, Typography, Paper } from '@mui/material';
+import { Box, Button, Typography, Paper, styled } from '@mui/material';
 import { Mic, Stop, Download } from '@mui/icons-material';
 import { VolumeIndicator } from './VolumeIndicator';
+
+const ControlButton = styled(Button)(({ theme }) => ({
+  width: 120,
+  height: 120,
+  borderRadius: '50%',
+  padding: theme.spacing(2),
+  border: `3px solid ${theme.palette.grey[800]}`,
+  '&:disabled': {
+    backgroundColor: theme.palette.grey[900],
+    border: `3px solid ${theme.palette.grey[800]}`,
+  },
+  '& .MuiSvgIcon-root': {
+    fontSize: 48,
+  },
+}));
+
+const DisplayPanel = styled(Box)(({ theme }) => ({
+  backgroundColor: theme.palette.grey[900],
+  border: `1px solid ${theme.palette.grey[800]}`,
+  borderRadius: theme.spacing(1),
+  padding: theme.spacing(2),
+  fontFamily: 'monospace',
+  color: theme.palette.primary.main,
+  fontSize: '2rem',
+  textAlign: 'center',
+  marginBottom: theme.spacing(3),
+  boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.5)',
+  minWidth: '150px',
+}));
 
 interface RecordingControlsProps {
   isRecording: boolean;
@@ -22,66 +51,133 @@ export const RecordingControls: React.FC<RecordingControlsProps> = ({
   onStart,
   onStop,
 }) => {
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <Paper 
       elevation={3}
       sx={{
-        p: 3,
-        maxWidth: 600,
+        p: 4,
         mx: 'auto',
         mt: 4,
-        backgroundColor: 'background.paper'
+        backgroundColor: 'background.paper',
+        borderRadius: 3,
+        border: '1px solid',
+        borderColor: 'grey.800',
+        display: 'grid',
+        gridTemplateColumns: '250px 1fr 300px',
+        gap: 4,
+        minHeight: '400px',
       }}
     >
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h6" gutterBottom align="center">
-          {isRecording 
-            ? `録音中... ${recordingTime}秒`
-            : '録音待機中'}
-        </Typography>
-      </Box>
-
-      <Box sx={{ mb: 3 }}>
+      {/* Left Section - Meters */}
+      <Box sx={{ 
+        backgroundColor: 'grey.900',
+        p: 3,
+        borderRadius: 2,
+        display: 'flex',
+        justifyContent: 'center',
+        gap: 4
+      }}>
         <VolumeIndicator label="マイク入力" value={micVolume} />
         <VolumeIndicator label="BlackHole出力" value={blackholeVolume} />
       </Box>
 
-      <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 3 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<Mic />}
-          onClick={onStart}
-          disabled={isRecording}
-        >
-          録音開始
-        </Button>
-        <Button
-          variant="contained"
-          color="secondary"
-          startIcon={<Stop />}
-          onClick={onStop}
-          disabled={!isRecording}
-        >
-          録音停止
-        </Button>
+      {/* Center Section - Controls */}
+      <Box sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'grey.900',
+        p: 3,
+        borderRadius: 2,
+      }}>
+        <DisplayPanel>
+          {formatTime(recordingTime)}
+        </DisplayPanel>
+
+        <Box sx={{ 
+          display: 'flex',
+          gap: 4,
+          justifyContent: 'center'
+        }}>
+          <ControlButton
+            variant="contained"
+            color="primary"
+            onClick={onStart}
+            disabled={isRecording}
+          >
+            <Mic />
+          </ControlButton>
+          <ControlButton
+            variant="contained"
+            color="error"
+            onClick={onStop}
+            disabled={!isRecording}
+          >
+            <Stop />
+          </ControlButton>
+        </Box>
       </Box>
 
-      {audioUrl && (
-        <Box sx={{ mt: 2 }}>
-          <audio controls src={audioUrl} style={{ width: '100%', marginBottom: '1rem' }} />
-          <Button
-            variant="outlined"
-            color="primary"
-            startIcon={<Download />}
-            fullWidth
-            href={audioUrl}
-            download="recording.webm"
+      {/* Right Section - Playback */}
+      <Box sx={{ 
+        backgroundColor: 'grey.900',
+        p: 3,
+        borderRadius: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+      }}>
+        {audioUrl ? (
+          <>
+            <Box sx={{
+              backgroundColor: 'background.paper',
+              p: 3,
+              borderRadius: 1,
+              mb: 3
+            }}>
+              <audio
+                controls
+                src={audioUrl}
+                style={{
+                  width: '100%',
+                  height: 60,
+                  backgroundColor: 'rgb(18, 18, 18)',
+                  borderRadius: '4px',
+                  padding: '4px'
+                }}
+              />
+            </Box>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<Download />}
+              href={audioUrl}
+              download="recording.webm"
+              sx={{
+                borderRadius: 1,
+                py: 1.5
+              }}
+            >
+              録音をダウンロード
+            </Button>
+          </>
+        ) : (
+          <Typography 
+            variant="body1" 
+            color="text.secondary"
+            align="center"
           >
-            録音をダウンロード
-          </Button>
-        </Box>
-      )}
+            録音ファイルはここに表示されます
+          </Typography>
+        )}
+      </Box>
     </Paper>
   );
 };
