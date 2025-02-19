@@ -2,7 +2,7 @@
   "name": "rec-agent",
   "version": "1.0.0",
   "description": "Electronを用いた録音アプリ",
-  "main": "build/main.js",
+  "main": "build/electron/main.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -19,13 +19,23 @@
     "files": [
       "build/**/*",
       "dist/**/*",
-      "package.json"
+      "package.json",
+      "!dist/**/*.map",
+      "!**/*.ts",
+      "!**/tsconfig.json"
     ],
     "directories": {
       "buildResources": "assets",
       "output": "release"
     },
     "asar": true,
+    "extraResources": [
+      {
+        "from": "dist",
+        "to": "dist",
+        "filter": ["**/*"]
+      }
+    ],
     "mac": {
       "category": "public.app-category.utilities",
       "target": [
