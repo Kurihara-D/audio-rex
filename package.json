@@ -7,11 +7,12 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "build:electron": "tsc --project electron/tsconfig.json",
+    "build:native": "cd native && npm install && npm run build",
     "preview": "vite preview",
     "start": "concurrently \"npm run dev\" \"npm run electron:dev\"",
     "electron:dev": "wait-on tcp:3000 && tsc --project electron/tsconfig.json && electron .",
-    "electron:build": "npm run build && npm run build:electron && electron-builder",
-    "clean": "rimraf dist build"
+    "electron:build": "npm run build && npm run build:electron && npm run build:native && electron-builder",
+    "clean": "rimraf dist build native/build"
   },
   "build": {
     "appId": "com.rec-agent.app",
@@ -34,6 +35,14 @@
         "from": "dist",
         "to": "dist",
         "filter": ["**/*"]
+      },
+      {
+        "from": "bin/SwitchAudioSource",
+        "to": "bin/SwitchAudioSource"
+      },
+      {
+        "from": "native/build/Release/audio.node",
+        "to": "native/audio.node"
       }
     ],
     "mac": {
@@ -70,7 +79,8 @@
     "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",
     "@mui/material": "^5.13.0",
-    "@mui/icons-material": "^5.11.16"
+    "@mui/icons-material": "^5.11.16",
+    "audio-native": "file:native"
   },
   "devDependencies": {
     "@types/node": "^20.2.5",

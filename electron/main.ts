@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, session } from 'electron';
 import * as path from 'path';
 import isDev from 'electron-is-dev';
 import * as fs from 'fs';
@@ -7,51 +7,177 @@ import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
-// システムオーディオデバイスの取得
-async function getSystemAudioDevices() {
-  try {
-    const { stdout } = await execAsync('SwitchAudioSource -a');
-    const { stdout: currentDevice } = await execAsync('SwitchAudioSource -c');
-    
-    // デバイス名の重複を防ぐために、Set を使用して一意のデバイスリストを作成
-    const uniqueDevices = new Set(stdout.split('\n').filter(line => line.trim()));
-    
-    const devices = Array.from(uniqueDevices).map(deviceName => ({
-      name: deviceName.trim(),
-      selected: deviceName.trim() === currentDevice.trim()
-    }));
-    
-    return devices;
-  } catch (error) {
-    console.error('オーディオデバイス取得エラー:', error);
-    return [];
+interface AudioDevice {
+  name: string;
+  id: number;
+  isOutput: boolean;
+}
+
+interface AudioManager {
+  getDeviceList(): Promise<Array<{ name: string; selected?: boolean }>>;
+  setDevice(deviceName: string): Promise<boolean>;
+}
+
+interface NativeAudioModule {
+  getDeviceList(): AudioDevice[];
+  getCurrentDevice(): number;
+  setDefaultDevice(deviceId: number): boolean;
+}
+
+// CoreAudioネイティブモジュールのパスを取得
+function getNativeModulePath(): string {
+  if (isDev) {
+    return path.join(app.getAppPath(), 'native', 'build', 'Release', 'audio.node');
+  } else {
+    return path.join(process.resourcesPath, 'native', 'audio.node');
   }
 }
 
-// システムオーディオデバイスの切り替え
-async function setSystemAudioDevice(deviceName: string) {
+// SwitchAudioSourceバイナリのパスを取得
+function getSwitchAudioSourcePath(): string {
+  if (isDev) {
+    return path.join(app.getAppPath(), 'bin', 'SwitchAudioSource');
+  } else {
+    return path.join(process.resourcesPath, 'bin', 'SwitchAudioSource');
+  }
+}
+
+// CoreAudioマネージャーの実装
+class CoreAudioManager implements AudioManager {
+  private nativeModule: NativeAudioModule;
+
+  constructor() {
+    try {
+      this.nativeModule = require(getNativeModulePath());
+    } catch (error) {
+      console.error('CoreAudioモジュールのロードに失敗:', error);
+      throw error;
+    }
+  }
+
+  async getDeviceList(): Promise<Array<{ name: string; selected?: boolean }>> {
+    try {
+      const devices: AudioDevice[] = this.nativeModule.getDeviceList();
+      const currentDevice: number = this.nativeModule.getCurrentDevice();
+      
+      return devices
+        .filter((device: AudioDevice) => device.isOutput)
+        .map((device: AudioDevice) => ({
+          name: device.name,
+          selected: device.id === currentDevice
+        }));
+    } catch (error) {
+      console.error('デバイス一覧の取得に失敗:', error);
+      throw error;
+    }
+  }
+
+  async setDevice(deviceName: string): Promise<boolean> {
+    try {
+      const devices: AudioDevice[] = this.nativeModule.getDeviceList();
+      const device = devices.find((d: AudioDevice) => d.name === deviceName && d.isOutput);
+      if (!device) {
+        return false;
+      }
+      return this.nativeModule.setDefaultDevice(device.id);
+    } catch (error) {
+      console.error('デバイスの設定に失敗:', error);
+      return false;
+    }
+  }
+}
+
+// SwitchAudioSourceマネージャーの実装
+class SwitchAudioManager implements AudioManager {
+  async getDeviceList(): Promise<Array<{ name: string; selected?: boolean }>> {
+    try {
+      const switchAudioSource = getSwitchAudioSourcePath();
+      const { stdout } = await execAsync(`"${switchAudioSource}" -a`);
+      const { stdout: currentDevice } = await execAsync(`"${switchAudioSource}" -c`);
+      
+      const uniqueDevices = new Set(stdout.split('\n').filter(line => line.trim()));
+      
+      return Array.from(uniqueDevices).map(deviceName => ({
+        name: deviceName.trim(),
+        selected: deviceName.trim() === currentDevice.trim()
+      }));
+    } catch (error) {
+      console.error('デバイス一覧の取得に失敗:', error);
+      throw error;
+    }
+  }
+
+  async setDevice(deviceName: string): Promise<boolean> {
+    try {
+      const switchAudioSource = getSwitchAudioSourcePath();
+      await execAsync(`"${switchAudioSource}" -s "${deviceName}"`);
+      return true;
+    } catch (error) {
+      console.error('デバイスの設定に失敗:', error);
+      return false;
+    }
+  }
+}
+
+// オーディオマネージャーのインスタンスを作成
+let audioManager: AudioManager;
+
+function initializeAudioManager() {
   try {
-    await execAsync(`SwitchAudioSource -s "${deviceName}"`);
-    return true;
+    audioManager = new CoreAudioManager();
+    console.log('CoreAudioマネージャーを初期化しました');
   } catch (error) {
-    console.error('オーディオデバイス切り替えエラー:', error);
-    return false;
+    console.log('CoreAudioの初期化に失敗、SwitchAudioSourceにフォールバック:', error);
+    audioManager = new SwitchAudioManager();
   }
 }
 
 // IPCハンドラーの設定
 function setupIpcHandlers() {
-  ipcMain.handle('get-system-audio-devices', getSystemAudioDevices);
-  ipcMain.handle('set-system-audio-device', (_, deviceName) => setSystemAudioDevice(deviceName));
+  ipcMain.handle('get-system-audio-devices', async () => {
+    try {
+      return await audioManager.getDeviceList();
+    } catch (error) {
+      console.error('オーディオデバイス取得エラー:', error);
+      return [];
+    }
+  });
+
+  ipcMain.handle('set-system-audio-device', async (_, deviceName: string) => {
+    try {
+      return await audioManager.setDevice(deviceName);
+    } catch (error) {
+      console.error('オーディオデバイス切り替えエラー:', error);
+      return false;
+    }
+  });
+}
+
+// Service Workerのクリーンアップ
+async function clearServiceWorkers() {
+  try {
+    const defaultSession = session.defaultSession;
+    await defaultSession.clearStorageData({
+      storages: ['serviceworkers']
+    });
+  } catch (error) {
+    console.error('Service Workerのクリーンアップに失敗:', error);
+  }
 }
 
 async function createWindow() {
+  // 起動時にService Workerをクリーンアップ
+  await clearServiceWorkers();
+
   console.log('Creating window...');
   console.log('Environment:', process.env.NODE_ENV);
   console.log('Is Development:', isDev);
   console.log('Current directory:', process.cwd());
   console.log('__dirname:', __dirname);
   console.log('Resource Path:', process.resourcesPath);
+  console.log('SwitchAudioSource Path:', getSwitchAudioSourcePath());
+  console.log('Native Audio Module Path:', getNativeModulePath());
+  console.log('Audio Manager Type:', audioManager instanceof CoreAudioManager ? 'CoreAudio' : 'SwitchAudioSource');
 
   const mainWindow = new BrowserWindow({
     width: 1200,
@@ -64,7 +190,9 @@ async function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       webSecurity: true,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      // Service Worker用のパーティションを指定
+      partition: 'persist:main'
     },
     backgroundColor: '#121212',
   });
@@ -146,6 +274,8 @@ async function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // オーディオマネージャーの初期化
+  initializeAudioManager();
   setupIpcHandlers();
   createWindow();
 });
