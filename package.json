@@ -2,14 +2,87 @@
   "name": "rec-agent",
   "version": "1.0.0",
   "description": "Electronを用いた録音アプリ",
-  "main": "main.js",
+  "main": "build/electron/main.js",
   "scripts": {
-    "start": "electron ."
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "build:electron": "tsc --project electron/tsconfig.json",
+    "preview": "vite preview",
+    "start": "concurrently \"npm run dev\" \"npm run electron:dev\"",
+    "electron:dev": "wait-on tcp:3000 && tsc --project electron/tsconfig.json && electron .",
+    "electron:build": "npm run build && npm run build:electron && electron-builder",
+    "clean": "rimraf dist build"
+  },
+  "build": {
+    "appId": "com.rec-agent.app",
+    "productName": "Audio Recorder Pro",
+    "files": [
+      "build/**/*",
+      "dist/**/*",
+      "package.json",
+      "!dist/**/*.map",
+      "!**/*.ts",
+      "!**/tsconfig.json"
+    ],
+    "directories": {
+      "buildResources": "assets",
+      "output": "release"
+    },
+    "asar": true,
+    "extraResources": [
+      {
+        "from": "dist",
+        "to": "dist",
+        "filter": ["**/*"]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "icon": "assets/icon.icns"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "zip"
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "assets/icon.png"
+    }
   },
   "dependencies": {
-    "materialize-css": "^1.0.0"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "electron-is-dev": "^2.0.0",
+    "@emotion/react": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
+    "@mui/material": "^5.13.0",
+    "@mui/icons-material": "^5.11.16"
   },
   "devDependencies": {
-    "electron": "^25.3.0"
+    "@types/node": "^20.2.5",
+    "@types/react": "^18.2.7",
+    "@types/react-dom": "^18.2.4",
+    "@vitejs/plugin-react": "^4.0.0",
+    "concurrently": "^8.0.1",
+    "electron": "^25.3.0",
+    "electron-builder": "^24.4.0",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.0.4",
+    "vite": "^4.3.9",
+    "wait-on": "^7.0.1"
   }
 }

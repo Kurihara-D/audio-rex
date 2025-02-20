@@ -2,8 +2,8 @@ const { app, BrowserWindow, ipcMain, desktopCapturer } = require('electron');
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+
+    frame: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
