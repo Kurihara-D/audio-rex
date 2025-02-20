@@ -110,50 +110,39 @@ export const useAudioRecorder = (participants: ParticipantsInfo) => {
 
   const startRecording = useCallback(async () => {
     try {
-      // 既存のストリームがない場合のみ新しく取得
-      if (!micStreamRef.current || !bhStreamRef.current) {
-        [micStreamRef.current, bhStreamRef.current] = await Promise.all([
-          navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true } }),
-          getBlackholeStream()
-        ]);
-      } else {
-        // 既存のストリームを有効化
-        micStreamRef.current.getTracks().forEach(track => track.enabled = true);
-        bhStreamRef.current.getTracks().forEach(track => track.enabled = true);
+      // 既存のストリームとAudioContextをクリーンアップ
+      if (micStreamRef.current) {
+        micStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (bhStreamRef.current) {
+        bhStreamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (audioContextRef.current) {
+        await audioContextRef.current.close();
       }
 
-      // AudioContextの初期化または再開
-      if (!audioContextRef.current) {
-        audioContextRef.current = new AudioContext();
-      } else if (audioContextRef.current.state === 'suspended') {
-        await audioContextRef.current.resume();
-      }
+      // 新しいストリームを取得
+      [micStreamRef.current, bhStreamRef.current] = await Promise.all([
+        navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true } }),
+        getBlackholeStream()
+      ]);
+
+      // 新しいAudioContextを作成
+      audioContextRef.current = new AudioContext();
 
       const destination = audioContextRef.current.createMediaStreamDestination();
 
-      // 初回のみノードを作成
-      if (!micAnalyserRef.current || !blackholeAnalyserRef.current) {
-        const micSource = audioContextRef.current.createMediaStreamSource(micStreamRef.current);
-        micAnalyserRef.current = audioContextRef.current.createAnalyser();
-        micSource.connect(micAnalyserRef.current);
-        micSource.connect(destination);
+      // 毎回新しくノードを作成
+      const micSource = audioContextRef.current.createMediaStreamSource(micStreamRef.current);
+      micAnalyserRef.current = audioContextRef.current.createAnalyser();
+      micSource.connect(micAnalyserRef.current);
+      micSource.connect(destination);
 
-        if (bhStreamRef.current) {
-          const bhSource = audioContextRef.current.createMediaStreamSource(bhStreamRef.current);
-          blackholeAnalyserRef.current = audioContextRef.current.createAnalyser();
-          bhSource.connect(blackholeAnalyserRef.current);
-          bhSource.connect(destination);
-        }
-      } else {
-        const micSource = audioContextRef.current.createMediaStreamSource(micStreamRef.current);
-        micSource.connect(micAnalyserRef.current);
-        micSource.connect(destination);
-
-        if (bhStreamRef.current) {
-          const bhSource = audioContextRef.current.createMediaStreamSource(bhStreamRef.current);
-          bhSource.connect(blackholeAnalyserRef.current);
-          bhSource.connect(destination);
-        }
+      if (bhStreamRef.current) {
+        const bhSource = audioContextRef.current.createMediaStreamSource(bhStreamRef.current);
+        blackholeAnalyserRef.current = audioContextRef.current.createAnalyser();
+        bhSource.connect(blackholeAnalyserRef.current);
+        bhSource.connect(destination);
       }
 
       chunksRef.current = [];
