@@ -1,0 +1,19 @@
+{
+  "name": "audio-native",
+  "version": "1.0.0",
+  "description": "Native audio module using CoreAudio",
+  "main": "build/Release/audio.node",
+  "private": true,
+  "scripts": {
+    "install": "node-gyp rebuild",
+    "build": "node-gyp rebuild",
+    "clean": "node-gyp clean"
+  },
+  "dependencies": {
+    "node-addon-api": "^6.1.0"
+  },
+  "devDependencies": {
+    "node-gyp": "^9.4.0"
+  },
+  "gypfile": true
+}
