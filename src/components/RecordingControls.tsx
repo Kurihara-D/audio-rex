@@ -1,7 +1,7 @@
 import React from 'react';
-import { Box, Button, Typography, Paper, styled, CircularProgress } from '@mui/material';
+import { Box, Button, Typography, Paper, styled } from '@mui/material';
 import { Mic, Stop, Download } from '@mui/icons-material';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { VolumeIndicator } from './VolumeIndicator';
 
 const ControlButton = styled(Button)(({ theme }) => ({

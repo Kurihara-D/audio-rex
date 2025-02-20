@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Typography, Box, styled, Link } from '@mui/material';
+import { Container, Typography, Box, styled } from '@mui/material';
 import { RecordingControls } from './components/RecordingControls';
 import { useAudioRecorder } from './hooks/useAudioRecorder';
 import { ParticipantFields } from './components/ParticipantFields';
