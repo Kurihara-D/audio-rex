@@ -78,7 +78,7 @@ const App: React.FC = () => {
             >
               Agent Rex
             </Typography>
-            <Link
+            {/* <Link
               href="https://www.notion.so/AgentRex-1a04d37ab76780aab2f1d07abb15a0d9?pvs=4"
               target="_blank"
               rel="noopener"
@@ -99,7 +99,7 @@ const App: React.FC = () => {
               }}
             >
               使い方マニュアル
-            </Link>
+            </Link> */}
           </Box>
 
           <ParticipantFields

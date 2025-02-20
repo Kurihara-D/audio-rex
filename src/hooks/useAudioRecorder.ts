@@ -41,17 +41,29 @@ export const useAudioRecorder = (participants: ParticipantsInfo) => {
     return `${staff || 'unknown'}-${client || 'unknown'}-${date}.webm`;
   }, [participants]);
 
+  // 参加者情報が変更されたときにファイル名を更新
+  useEffect(() => {
+    if (state.isRecording) {
+      const fileName = generateFileName();
+      setState(prev => ({
+        ...prev,
+        audioUrl: prev.audioUrl ? {
+          ...prev.audioUrl,
+          fileName: fileName
+        } : null
+      }));
+    }
+  }, [participants, state.isRecording, generateFileName]);
+
   const handleStop = useCallback(() => {
     const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
     const url = URL.createObjectURL(blob);
-    // 録音停止時に最新のparticipants情報でファイル名を生成
-    const fileName = generateFileName();
     setState(prev => ({
       ...prev,
       audioUrl: {
         url: url,
         mimeType: 'audio/webm',
-        fileName: fileName
+        fileName: prev.audioUrl?.fileName || generateFileName() // 既存のファイル名を保持、なければ新規生成
       }
     }));
   }, [generateFileName]);
@@ -156,7 +168,19 @@ export const useAudioRecorder = (participants: ParticipantsInfo) => {
       recorderRef.current.start();
       startTimeRef.current = Date.now();
       isRecordingRef.current = true;
-      setState(prev => ({ ...prev, isRecording: true, recordingTime: 0 }));
+      
+      // 録音開始時に初期のファイル名を設定
+      const fileName = generateFileName();
+      setState(prev => ({
+        ...prev,
+        isRecording: true,
+        recordingTime: 0,
+        audioUrl: {
+          url: '', // 録音中は空のURLを設定
+          mimeType: 'audio/webm',
+          fileName: fileName
+        }
+      }));
 
       // Start the combined update loop
       updateVolumeAndTimer();

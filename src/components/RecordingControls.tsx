@@ -52,14 +52,9 @@ export const RecordingControls: React.FC<RecordingControlsProps> = ({
   onStart,
   onStop,
 }) => {
-  const [isAudioLoading, setIsAudioLoading] = useState(false);
-  const [audioDuration, setAudioDuration] = useState<number | null>(null);
 
   useEffect(() => {
-    if (audioUrl) {
-      setIsAudioLoading(true);
-      setAudioDuration(null);
-    }
+    
   }, [audioUrl]);
 
   const formatTime = (seconds: number) => {
