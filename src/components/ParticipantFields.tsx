@@ -44,7 +44,7 @@ export const ParticipantFields: React.FC<ParticipantFieldsProps> = ({
         }}
       />
       <TextField
-        label="相手"
+        label="参加者"
         value={client}
         onChange={(e) => onClientChange(e.target.value)}
         variant="outlined"
