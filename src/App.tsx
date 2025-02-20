@@ -1,11 +1,12 @@
-import React from 'react';
-import { Container, Typography, Box, styled } from '@mui/material';
+import React, { useState } from 'react';
+import { Container, Typography, Box, styled, Link } from '@mui/material';
 import { RecordingControls } from './components/RecordingControls';
 import { useAudioRecorder } from './hooks/useAudioRecorder';
+import { ParticipantFields } from './components/ParticipantFields';
 
 const AppContainer = styled(Box)(({ theme }) => ({
-  width: '100%',
-  height: '100%',
+  width: '100vw',
+  height: '100vh',
   background: `linear-gradient(145deg, ${theme.palette.grey[900]} 0%, ${theme.palette.grey[800]} 100%)`,
   display: 'flex',
   flexDirection: 'column',
@@ -19,23 +20,26 @@ const StyledContainer = styled(Container)({
   maxWidth: 'none !important',
   display: 'flex',
   flexDirection: 'column',
-  height: '100%',
+  minHeight: 0,
   width: '100%'
 });
 
-const GlassPanel = styled(Box)(({ theme }) => ({
+const GlassPanel = styled(Box)(({ }) => ({
   backgroundColor: 'rgba(0, 0, 0, 0.6)',
   backdropFilter: 'blur(10px)',
-  padding: theme.spacing(3, 0),
   boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
   flex: 1,
   display: 'flex',
   flexDirection: 'column',
   overflow: 'hidden',
-  width: '100%'
+  width: '100%',
+  minHeight: 0
 }));
 
 const App: React.FC = () => {
+  const [staff, setStaff] = useState<string>('');
+  const [client, setClient] = useState<string>('');
+
   const {
     isRecording,
     recordingTime,
@@ -44,17 +48,24 @@ const App: React.FC = () => {
     audioUrl,
     startRecording,
     stopRecording
-  } = useAudioRecorder();
+  } = useAudioRecorder({
+    staff,
+    client
+  });
 
   return (
     <AppContainer>
       <StyledContainer maxWidth={false}>
         <GlassPanel>
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <Typography 
-              variant="h4" 
-              component="h1" 
-              gutterBottom
+          <Box sx={{
+            textAlign: 'center',
+            mb: 1,
+            pt: 2,
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          }}>
+            <Typography
+              variant="h4"
+              component="h1"
               sx={{
                 fontWeight: 'bold',
                 background: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
@@ -62,18 +73,41 @@ const App: React.FC = () => {
                 textFillColor: 'transparent',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
+                mb: 1,
               }}
             >
-              Audio Recorder Pro
+              Agent Rex
             </Typography>
-            <Typography 
-              variant="subtitle1" 
-              color="text.secondary" 
-              sx={{ opacity: 0.8 }}
+            <Link
+              href="https://www.notion.so/AgentRex-1a04d37ab76780aab2f1d07abb15a0d9?pvs=4"
+              target="_blank"
+              rel="noopener"
+              onClick={(e) => {
+                e.preventDefault();
+                window.open(e.currentTarget.href, '_blank');
+              }}
+              sx={{
+                color: 'text.secondary',
+                opacity: 0.8,
+                textDecoration: 'underline',
+                '&:hover': {
+                  opacity: 1,
+                  color: 'primary.main',
+                },
+                display: 'block',
+                mb: 2,
+              }}
             >
-              マイク入力とBlackHole出力を同時に録音
-            </Typography>
+              使い方マニュアル
+            </Link>
           </Box>
+
+          <ParticipantFields
+            staff={staff}
+            client={client}
+            onStaffChange={setStaff}
+            onClientChange={setClient}
+          />
 
           <RecordingControls
             isRecording={isRecording}

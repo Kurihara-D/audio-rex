@@ -1,6 +1,7 @@
 import React from 'react';
-import { Box, Button, Typography, Paper, styled } from '@mui/material';
+import { Box, Button, Typography, Paper, styled, CircularProgress } from '@mui/material';
 import { Mic, Stop, Download } from '@mui/icons-material';
+import { useState, useEffect } from 'react';
 import { VolumeIndicator } from './VolumeIndicator';
 
 const ControlButton = styled(Button)(({ theme }) => ({
@@ -37,7 +38,7 @@ interface RecordingControlsProps {
   recordingTime: number;
   micVolume: number;
   blackholeVolume: number;
-  audioUrl: string | null;
+  audioUrl: { url: string; mimeType: string; fileName: string } | null;
   onStart: () => void;
   onStop: () => void;
 }
@@ -51,6 +52,16 @@ export const RecordingControls: React.FC<RecordingControlsProps> = ({
   onStart,
   onStop,
 }) => {
+  const [isAudioLoading, setIsAudioLoading] = useState(false);
+  const [audioDuration, setAudioDuration] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (audioUrl) {
+      setIsAudioLoading(true);
+      setAudioDuration(null);
+    }
+  }, [audioUrl]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -58,50 +69,62 @@ export const RecordingControls: React.FC<RecordingControlsProps> = ({
   };
 
   return (
-    <Paper 
-      elevation={3}
-      sx={{
-        p: 4,
-        mx: 'auto',
-        mt: 4,
-        backgroundColor: 'background.paper',
-        borderRadius: 3,
-        border: '1px solid',
-        borderColor: 'grey.800',
-        display: 'grid',
-        gridTemplateColumns: '250px 1fr 300px',
-        gap: 4,
-        minHeight: '400px',
-      }}
+    <Paper
+     elevation={3}
+     sx={{
+       p: 3,
+       mx: 0,
+       mt: 0,
+       backgroundColor: 'background.paper',
+       borderRadius: 0,
+       border: '1px solid',
+       borderColor: 'grey.800',
+       display: 'grid',
+       gridTemplateColumns: '250px 1fr',
+       gridTemplateRows: '1fr auto',
+       gap: 3,
+       height: '100%',
+       flex: 1,
+       minHeight: 0,
+       overflow: 'hidden',
+     }}
     >
       {/* Left Section - Meters */}
-      <Box sx={{ 
+      <Box sx={{
         backgroundColor: 'grey.900',
         p: 3,
         borderRadius: 2,
         display: 'flex',
+        flexDirection: 'column',
         justifyContent: 'center',
-        gap: 4
+        alignItems: 'center',
+        gap: 6,
+        gridRow: '1 / 3',
+        height: '100%'
       }}>
         <VolumeIndicator label="マイク入力" value={micVolume} />
         <VolumeIndicator label="BlackHole出力" value={blackholeVolume} />
       </Box>
 
-      {/* Center Section - Controls */}
+      {/* Top Section - Controls */}
       <Box sx={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: 'grey.900',
-        p: 3,
+        p: 4,
         borderRadius: 2,
+        gridColumn: '2',
+        gridRow: '1',
+        height: '100%',
+        minHeight: '300px',
       }}>
         <DisplayPanel>
           {formatTime(recordingTime)}
         </DisplayPanel>
 
-        <Box sx={{ 
+        <Box sx={{
           display: 'flex',
           gap: 4,
           justifyContent: 'center'
@@ -125,30 +148,26 @@ export const RecordingControls: React.FC<RecordingControlsProps> = ({
         </Box>
       </Box>
 
-      {/* Right Section - Playback */}
-      <Box sx={{ 
+      {/* Bottom Section - Playback */}
+      <Box sx={{
         backgroundColor: 'grey.900',
         p: 3,
         borderRadius: 2,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
+        gridColumn: '2',
+        gridRow: '2',
       }}>
         {audioUrl ? (
           <>
-            <Box sx={{
-              backgroundColor: 'background.paper',
-              p: 3,
-              borderRadius: 1,
-              mb: 3
-            }}>
+            <Box>
               <audio
                 controls
-                src={audioUrl}
+                src={audioUrl?.url}
                 style={{
                   width: '100%',
                   height: 60,
-                  backgroundColor: 'rgb(18, 18, 18)',
                   borderRadius: '4px',
                   padding: '4px'
                 }}
@@ -158,8 +177,8 @@ export const RecordingControls: React.FC<RecordingControlsProps> = ({
               variant="contained"
               color="primary"
               startIcon={<Download />}
-              href={audioUrl}
-              download="recording.webm"
+              href={audioUrl.url}
+              download={audioUrl.fileName}
               sx={{
                 borderRadius: 1,
                 py: 1.5
@@ -169,10 +188,11 @@ export const RecordingControls: React.FC<RecordingControlsProps> = ({
             </Button>
           </>
         ) : (
-          <Typography 
-            variant="body1" 
+          <Typography
+            variant="body1"
             color="text.secondary"
             align="center"
+            sx={{ py: 4 }}
           >
             録音ファイルはここに表示されます
           </Typography>

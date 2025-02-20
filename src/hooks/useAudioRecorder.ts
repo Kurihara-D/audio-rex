@@ -1,14 +1,19 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
+interface ParticipantsInfo {
+  staff: string;
+  client: string;
+}
+
 interface AudioRecorderState {
   isRecording: boolean;
   recordingTime: number;
   micVolume: number;
   blackholeVolume: number;
-  audioUrl: string | null;
+  audioUrl: { url: string; mimeType: string; fileName: string; } | null;
 }
 
-export const useAudioRecorder = () => {
+export const useAudioRecorder = (participants: ParticipantsInfo) => {
   const [state, setState] = useState<AudioRecorderState>({
     isRecording: false,
     recordingTime: 0,
@@ -16,7 +21,7 @@ export const useAudioRecorder = () => {
     blackholeVolume: 0,
     audioUrl: null,
   });
-
+  
   const audioContextRef = useRef<AudioContext | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
@@ -27,6 +32,29 @@ export const useAudioRecorder = () => {
   const animationFrameRef = useRef<number | null>(null);
   const startTimeRef = useRef<number | null>(null);
   const isRecordingRef = useRef<boolean>(false);
+
+  const generateFileName = useCallback(() => {
+    const date = new Date().toISOString().split('T')[0];
+
+    const staff = participants?.staff?.trim() || '';
+    const client = participants?.client?.trim() || '';
+    return `${staff || 'unknown'}-${client || 'unknown'}-${date}.webm`;
+  }, [participants]);
+
+  const handleStop = useCallback(() => {
+    const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+    const url = URL.createObjectURL(blob);
+    // 録音停止時に最新のparticipants情報でファイル名を生成
+    const fileName = generateFileName();
+    setState(prev => ({
+      ...prev,
+      audioUrl: {
+        url: url,
+        mimeType: 'audio/webm',
+        fileName: fileName
+      }
+    }));
+  }, [generateFileName]);
 
   const getBlackholeStream = useCallback(async () => {
     const devices = await navigator.mediaDevices.enumerateDevices();
@@ -117,16 +145,13 @@ export const useAudioRecorder = () => {
       }
 
       chunksRef.current = [];
-      recorderRef.current = new MediaRecorder(destination.stream);
+
+      // MediaRecorderの作成と設定
+      recorderRef.current = new MediaRecorder(destination.stream, { mimeType: 'audio/webm' });
       recorderRef.current.ondataavailable = (event) => {
         chunksRef.current.push(event.data);
       };
-
-      recorderRef.current.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        const url = URL.createObjectURL(blob);
-        setState(prev => ({ ...prev, audioUrl: url }));
-      };
+      recorderRef.current.onstop = handleStop;
 
       recorderRef.current.start();
       startTimeRef.current = Date.now();
@@ -139,7 +164,7 @@ export const useAudioRecorder = () => {
       console.error('Recording error:', err);
       throw err;
     }
-  }, [getBlackholeStream, updateVolumeAndTimer]);
+  }, [getBlackholeStream, updateVolumeAndTimer, handleStop]);
 
   const stopRecording = useCallback(() => {
     if (recorderRef.current && recorderRef.current.state !== 'inactive') {

@@ -32,7 +32,7 @@ interface VolumeIndicatorProps {
 export const VolumeIndicator: React.FC<VolumeIndicatorProps> = ({ label, value }) => {
   // 0-255の値を20セグメントに分割
   const segments = useMemo(() => {
-    const normalizedValue = (value / 255) * 20;
+    const normalizedValue = (value / 255) * 70;
     return Array.from({ length: 20 }, (_, i) => ({
       active: i < normalizedValue,
       isRed: i >= 16, // 上位4セグメントは赤色
