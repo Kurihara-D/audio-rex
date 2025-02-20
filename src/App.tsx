@@ -3,6 +3,7 @@ import { Container, Typography, Box, styled } from '@mui/material';
 import { RecordingControls } from './components/RecordingControls';
 import { useAudioRecorder } from './hooks/useAudioRecorder';
 import { ParticipantFields } from './components/ParticipantFields';
+import { AudioDevices } from './components/AudioDevices';
 
 const AppContainer = styled(Box)(({ theme }) => ({
   width: '100vw',
@@ -108,6 +109,8 @@ const App: React.FC = () => {
             onStaffChange={setStaff}
             onClientChange={setClient}
           />
+
+          <AudioDevices />
 
           <RecordingControls
             isRecording={isRecording}

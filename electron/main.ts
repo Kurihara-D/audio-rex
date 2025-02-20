@@ -1,7 +1,49 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import * as path from 'path';
 import isDev from 'electron-is-dev';
 import * as fs from 'fs';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
+
+// システムオーディオデバイスの取得
+async function getSystemAudioDevices() {
+  try {
+    const { stdout } = await execAsync('SwitchAudioSource -a');
+    const { stdout: currentDevice } = await execAsync('SwitchAudioSource -c');
+    
+    // デバイス名の重複を防ぐために、Set を使用して一意のデバイスリストを作成
+    const uniqueDevices = new Set(stdout.split('\n').filter(line => line.trim()));
+    
+    const devices = Array.from(uniqueDevices).map(deviceName => ({
+      name: deviceName.trim(),
+      selected: deviceName.trim() === currentDevice.trim()
+    }));
+    
+    return devices;
+  } catch (error) {
+    console.error('オーディオデバイス取得エラー:', error);
+    return [];
+  }
+}
+
+// システムオーディオデバイスの切り替え
+async function setSystemAudioDevice(deviceName: string) {
+  try {
+    await execAsync(`SwitchAudioSource -s "${deviceName}"`);
+    return true;
+  } catch (error) {
+    console.error('オーディオデバイス切り替えエラー:', error);
+    return false;
+  }
+}
+
+// IPCハンドラーの設定
+function setupIpcHandlers() {
+  ipcMain.handle('get-system-audio-devices', getSystemAudioDevices);
+  ipcMain.handle('set-system-audio-device', (_, deviceName) => setSystemAudioDevice(deviceName));
+}
 
 async function createWindow() {
   console.log('Creating window...');
@@ -10,6 +52,7 @@ async function createWindow() {
   console.log('Current directory:', process.cwd());
   console.log('__dirname:', __dirname);
   console.log('Resource Path:', process.resourcesPath);
+
   const mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -18,9 +61,10 @@ async function createWindow() {
     show: false,
     useContentSize: true,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-      webSecurity: false
+      nodeIntegration: false,
+      contextIsolation: true,
+      webSecurity: true,
+      preload: path.join(__dirname, 'preload.js')
     },
     backgroundColor: '#121212',
   });
@@ -97,10 +141,14 @@ async function createWindow() {
 
   mainWindow.webContents.on('did-finish-load', () => {
     console.log('Page finished loading');
+    setupIpcHandlers();
   });
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  setupIpcHandlers();
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
