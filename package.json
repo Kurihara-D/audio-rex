@@ -1,6 +1,6 @@
 {
   "name": "rec-agent",
-  "version": "2.1.4",
+  "version": "2.1.5",
   "description": "Electronを用いた録音アプリ",
   "main": "build/electron/main.js",
   "scripts": {
@@ -50,8 +50,8 @@
     "mac": {
       "category": "public.app-category.utilities",
       "target": [
-       "dmg",
-       "zip"
+        "dmg",
+        "zip"
       ],
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
