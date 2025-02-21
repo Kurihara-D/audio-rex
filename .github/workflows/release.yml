@@ -39,6 +39,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHON: python3
 
+      - name: Clean artifacts
+        run: |
+          find release -name "*.app" -type d -exec xattr -cr {} \;
+          find release -name "*.zip" -type f -exec xattr -cr {} \;
+          find release -name "*.dmg" -type f -exec xattr -cr {} \;
+
       - name: Upload artifacts to release
         uses: softprops/action-gh-release@v1
         with:

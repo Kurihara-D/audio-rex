@@ -16,7 +16,7 @@
   },
   "build": {
     "appId": "com.rec-agent.app",
-    "productName": "Audio Recorder Pro",
+    "productName": "Agent Rex",
     "files": [
       "build/**/*",
       "dist/**/*",
@@ -57,7 +57,12 @@
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
-      "icon": "assets/icon.icns"
+      "icon": "assets/icon.icns",
+      "extendInfo": {
+        "LSFileQuarantineEnabled": false,
+        "NSAppleEventsUsageDescription": "Audio recording functionality",
+        "NSMicrophoneUsageDescription": "This app requires microphone access for audio recording"
+      }
     },
     "win": {
       "target": [
@@ -92,6 +97,7 @@
     "concurrently": "^8.0.1",
     "electron": "^25.3.0",
     "electron-builder": "^24.4.0",
+    
     "rimraf": "^5.0.0",
     "typescript": "^5.0.4",
     "vite": "^4.3.9",
