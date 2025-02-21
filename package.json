@@ -1,6 +1,6 @@
 {
   "name": "rec-agent",
-  "version": "2.1.3",
+  "version": "2.1.4",
   "description": "Electronを用いた録音アプリ",
   "main": "build/electron/main.js",
   "scripts": {
@@ -52,11 +52,17 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "hardenedRuntime": true,
