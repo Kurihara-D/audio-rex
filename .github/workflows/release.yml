@@ -39,21 +39,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHON: python3
 
-      - name: Prepare artifacts
-        run: |
-          # DMGファイルの作成前の準備
-          find release -name "*.app" -type d -exec xattr -cr {} \;
-          find release -name "*.app" -type d -exec chmod -R a+rx {} \;
-          
-          # DMGファイルの作成とクリーニング
-          find release -name "*.dmg" -type f -exec xattr -cr {} \;
-          find release -name "*.dmg" -type f -exec chmod 644 {} \;
-          
-          # Zipファイルの作成とクリーニング
-          find release -name "*.zip" -type f -exec ditto -c -k --keepParent --noqtn {} {}.new \;
-          find release -name "*.zip.new" -type f -exec mv {} {}.bak \;
-          find release -name "*.zip.new.bak" -type f -exec bash -c 'mv "$1" "${1%.new.bak}"' _ {} \;
-
       - name: Upload artifacts to release
         uses: softprops/action-gh-release@v1
         with:
