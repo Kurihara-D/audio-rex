@@ -62,7 +62,14 @@
         "LSFileQuarantineEnabled": false,
         "NSAppleEventsUsageDescription": "Audio recording functionality",
         "NSMicrophoneUsageDescription": "This app requires microphone access for audio recording"
-      }
+      },
+      "signIgnore": [
+        "node_modules/*",
+        "dist/**/*.map"
+      ],
+      "strictVerify": false,
+      "notarize": false,
+      "identity": null
     },
     "win": {
       "target": [
