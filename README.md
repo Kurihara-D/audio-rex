@@ -1,4 +1,4 @@
-# Audio Recorder Pro
+# Audio Recorder
 
 Electronを使用したオーディオ録音アプリケーション。CoreAudioを直接使用してシステムオーディオデバイスを制御し、フォールバックとしてswitchaudio-osxをサポートします。
 
