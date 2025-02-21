@@ -50,8 +50,14 @@
     "mac": {
       "category": "public.app-category.utilities",
       "target": [
-        "dmg",
-        "zip"
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64", "arm64"]
+        }
       ],
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
@@ -61,7 +67,9 @@
       "extendInfo": {
         "LSFileQuarantineEnabled": false,
         "NSAppleEventsUsageDescription": "Audio recording functionality",
-        "NSMicrophoneUsageDescription": "This app requires microphone access for audio recording"
+        "NSMicrophoneUsageDescription": "This app requires microphone access for audio recording",
+        "CFBundleDocumentTypes": [],
+        "LSMinimumSystemVersion": "10.15.0"
       },
       "signIgnore": [
         "node_modules/*",
@@ -70,6 +78,12 @@
       "strictVerify": false,
       "notarize": false,
       "identity": null
+    },
+    "dmg": {
+      "sign": false,
+      "writeUpdateInfo": false,
+      "internetEnabled": false,
+      "format": "ULFO"
     },
     "win": {
       "target": [
